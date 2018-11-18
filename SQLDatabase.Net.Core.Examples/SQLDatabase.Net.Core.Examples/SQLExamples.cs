@@ -98,6 +98,11 @@ namespace SQLDatabase.Net.Core.Examples
             Console.ReadKey();
             TrackDataChanges();
             Console.WriteLine();
+
+            Console.WriteLine("* Press Any key to start Identity values Example:");
+            Console.ReadKey();
+            IdentityColumnValues();
+            Console.WriteLine();
         }
 
 
@@ -914,6 +919,59 @@ namespace SQLDatabase.Net.Core.Examples
                         foreach (object[] row in rs[0].Rows)
                             foreach (object column in row)
                                 Console.WriteLine(column);
+                    }
+                }
+            }
+        }
+
+        static void IdentityColumnValues()
+        {
+            using (SqlDatabaseConnection sqlcnn = new SqlDatabaseConnection("schemaName=db;uri=@memory"))
+            {
+                sqlcnn.Open();
+                using (SqlDatabaseCommand cmd = new SqlDatabaseCommand(sqlcnn))
+                {
+                    cmd.CommandText = "CREATE TABLE IF NOT EXISTS TestTable(Id Integer Primary Key AutoIncrement, Name Text);";
+                    cmd.ExecuteNonQuery();
+                    // Id should be one (1) after first insert
+                    cmd.CommandText = "INSERT INTO TestTable VALUES(null, 'Hello');";
+                    cmd.ExecuteNonQuery();
+                    //LastSequenceNumber requires table name
+                    Console.WriteLine(string.Format("via cmd.LastSequenceNumber: {0}", cmd.LastSequenceNumber("TestTable")));
+                    //LastInsertRowId is tracked on connection.
+                    Console.WriteLine(string.Format("via sqlcnn.LastInsertRowId: {0}", sqlcnn.LastInsertRowId));
+                    //last_insert_rowid() is tracked on connection and returns Int64
+                    cmd.CommandText = "SELECT last_insert_rowid()";
+                    Int64 LastID = (Int64)cmd.ExecuteScalar();
+                    Console.WriteLine(string.Format("via SQL: {0}", LastID));
+                    // Id should be two (2) after following insert.
+                    cmd.CommandText = "INSERT INTO TestTable(Name) VALUES('World');";
+                    cmd.ExecuteNonQuery();
+                    //LastSequenceNumber requires table name
+                    Console.WriteLine(string.Format("via cmd.LastSequenceNumber: {0}", cmd.LastSequenceNumber("TestTable")));
+                    //LastInsertRowId is tracked on connection.
+                    Console.WriteLine(string.Format("via sqlcnn.LastInsertRowId: {0}", sqlcnn.LastInsertRowId));
+                    //last_insert_rowid is tracked on connection SQL Statement
+                    cmd.CommandText = "SELECT last_insert_rowid()";
+                    LastID = (Int64)cmd.ExecuteScalar();
+                    Console.WriteLine(string.Format("via SQL: {0}", LastID));
+                    //Attach another database file to same connection
+                    cmd.CommandText = "ATTACH DATABASE '@memory' AS 'db1'";
+                    cmd.ExecuteNonQuery();
+                    // Create table on schema db1
+                    cmd.CommandText = "CREATE TABLE IF NOT EXISTS db1.TestTable(Id Integer Primary Key AutoIncrement, Name Text);";
+                    cmd.ExecuteNonQuery();
+                    // Id should be one (1)
+                    cmd.CommandText = "INSERT INTO db1.TestTable VALUES(null, 'Hello');";
+                    cmd.ExecuteNonQuery();
+                    cmd.CommandText = "SELECT last_insert_rowid()";
+                    LastID = (Int64)cmd.ExecuteScalar();
+                    Console.WriteLine(string.Format("via SQL from db1: {0}", LastID));
+                    cmd.CommandText = "SELECT * FROM db1.TestTable WHERE Id = last_insert_rowid()";
+                    SqlDatabaseDataReader dr = cmd.ExecuteReader();
+                    while (dr.Read())
+                    {
+                        Console.WriteLine(dr["Name"]);
                     }
                 }
             }
