@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.IO;
@@ -205,26 +205,29 @@ namespace SQLDatabase.Net.Core.Examples
                 {
                     cmd.CommandText = "Create Table If not exists temptable(Id Integer, TextValue Text) ; ";
                     cmd.ExecuteNonQuery();
-
+                    
                     SqlDatabaseTransaction trans = cnn.BeginTransaction();
                     cmd.Transaction = trans;
-
+                    
                     try
                     {
                         for (int i = 0; i < 1000; i++)
                         {
-                            cmd.CommandText = "INSERT INTO temptable VALUES (" + i + ", 'AValue" + i + "');";
+                            cmd.CommandText = "INSERT INTO temptable VALUES (" + i + ", 'A Value" + i + "');";
                             cmd.ExecuteNonQuery();
                         }
+                        trans.Commit(); //Commit since all inserts are completed.
+
+                        //Test if transaction is open 
+                        if (trans.IsOpen)
+                            trans.Commit();
                     }
                     catch (SqlDatabaseException sqlex)
                     {
-                        trans.Rollback();
+                        //Rollback as their was an error.
+                        if (trans.IsOpen)
+                            trans.Rollback();
                         Console.WriteLine(sqlex.Message);
-                    }
-                    finally
-                    {
-                        trans.Commit();
                     }
 
                     cmd.CommandText = "SELECT COUNT(*) FROM temptable;";
@@ -233,7 +236,8 @@ namespace SQLDatabase.Net.Core.Examples
                     // Pure SQL Way of starting and committing transaction.
                     cmd.CommandText = "BEGIN";
                     cmd.ExecuteNonQuery();
-                    // Your code and commands can reside here to run in a transaction.
+                    // Your SQL Statements and commands can reside here to run with-in a transaction.
+                    // INSERT UPDATE and DELETE
                     cmd.CommandText = "COMMIT"; //ROLLBACK
                     cmd.ExecuteNonQuery();
 
@@ -289,15 +293,12 @@ namespace SQLDatabase.Net.Core.Examples
                         }
                     }
 
+                    trans.Commit();
                 }
                 catch (SqlDatabaseException sqlex)
                 {
                     trans.Rollback();
                     Console.WriteLine(sqlex.Message);
-                }
-                finally
-                {
-                    trans.Commit();
                 }
 
                 // Let's check the record count.
