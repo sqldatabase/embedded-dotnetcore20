@@ -1,4 +1,8 @@
-# Examples for .Net Standard 2.0 in c# with dotnet core 2.0 in a console application.
+# Add the .dll either by downloading from website or through Nuget
+
+The examples will work on x86 or x64 bit dll files which can be downloaded from the website [download section] (http://www.sqldatabase.net/downloads.aspx) or from [Nuget] https://www.nuget.org/profiles/sqldatabase.net and [Direct Page] (https://www.nuget.org/packages/SQLDatabase.Net/) 
+
+## Examples for .Net Standard 2.0 in c# with dotnet core 2.0 in a console application.
 
 Embedded database Example for dot net core 2.0 using .Net standard 2.0 library, the examples inlcude importing and exporting CSV, key value store and orm client similar to eff. The example project uses library from http://wwww.sqldatabase.net and require Visual studio 2017 however examples work with .Net 4.6 and above as long as .Net standard is supported the example code can be copied from these examples to use in your own project. Some may require little modification and some are utility classes and only require changes to namespace etc.
 
