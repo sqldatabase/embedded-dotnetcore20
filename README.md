@@ -1,4 +1,4 @@
-# Add the .dll either by downloading from website or through Nuget
+# Add the .dll either by downloading from website or through Nuget Example need Libarary Version 2.7.0.0
 
 The examples will work on x86 or x64 bit dll files which can be downloaded from the website [download section] (http://www.sqldatabase.net/downloads.aspx) or from [Nuget] https://www.nuget.org/profiles/sqldatabase.net and [Direct Page] (https://www.nuget.org/packages/SQLDatabase.Net/) 
 
