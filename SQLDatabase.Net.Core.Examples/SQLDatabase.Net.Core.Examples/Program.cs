@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Data;
 using System.Threading.Tasks;
@@ -10,14 +10,11 @@ using System.Dynamic;
 using System.Collections.Generic;
 namespace SQLDatabase.Net.Core.Examples
 {
-    // TODO
-    // Transaction IsActive
-    // SqlDatabaseReader.HasRows is incorrect
-    // Connection. GetSchema does not permit schema name
-    // Connection. GetSchema should not return any column or values if it does not exists.
+    // Examples for Library VERSION 2.7
 
     class Program
     {
+        
 
         //holds example database file name.
         static string ExampleDatabaseFile = "Orders.db";
@@ -25,9 +22,20 @@ namespace SQLDatabase.Net.Core.Examples
         //Extended Result Set and Active ResultSet are 
         static SqlDatabaseConnectionStringBuilder cb = new SqlDatabaseConnectionStringBuilder();
 
+        static bool ShowEventResults = false;
+
         static void Main(string[] args)
         {
+            //Events Handler Definitions starting with version 2.7
+            SqlDatabaseExternalEventHandler.ExecScalarUDFEvent += SqlDatabaseEventHandler_ExecScalarUDFEvent;
+            SqlDatabaseExternalEventHandler.InsertStatementEvent += SqlDatabaseExternalEventHandler_InsertStatementEvent;
+            SqlDatabaseExternalEventHandler.UpdateStatementEvent += SqlDatabaseExternalEventHandler_UpdateStatementEvent;
+            SqlDatabaseExternalEventHandler.DeleteStatementEvent += SqlDatabaseExternalEventHandler_DeleteStatementEvent;
+            SqlDatabaseExternalEventHandler.BeginTransactionEvent += SqlDatabaseExternalEventHandler_BeginTransactionEvent;
+            SqlDatabaseExternalEventHandler.CommitTransactionEvent += SqlDatabaseExternalEventHandler_CommitTransactionEvent;
+            SqlDatabaseExternalEventHandler.RollbackTransactionEvent += SqlDatabaseExternalEventHandler_RollbackTransactionEvent;
 
+            MetaCollections();
             Console.WriteLine("**** Example and tests for wwww.sqldatabase.net ****\n");
             Console.WriteLine();
 
@@ -124,6 +132,7 @@ namespace SQLDatabase.Net.Core.Examples
                 importExport.TableName = "Products1";
                 rowcount = importExport.ImportTable("Products.csv", true);
                 Console.WriteLine("Number of Rows Exported : {0}", rowcount);
+                cnn.Close();
             }
         }
 
@@ -219,6 +228,68 @@ namespace SQLDatabase.Net.Core.Examples
 
             //Delete by key
             Console.WriteLine("Number of records deleted: {0}", kvstore.Delete("Test", "JohnDoe"));
+        }
+
+
+        //Events Example
+        private static void SqlDatabaseExternalEventHandler_RollbackTransactionEvent()
+        {
+            if (ShowEventResults)
+                Console.WriteLine("EVENT ROLLBACK TRANSACTION CALLED");
+        }
+
+        private static void SqlDatabaseExternalEventHandler_CommitTransactionEvent()
+        {
+            if (ShowEventResults)
+                Console.WriteLine("EVENT COMMIT TRANSACTION CALLED");
+        }
+
+        private static void SqlDatabaseExternalEventHandler_BeginTransactionEvent()
+        {
+            if (ShowEventResults)
+                Console.WriteLine("EVENT BEGIN TRANSACTION CALLED");
+        }
+
+        private static void SqlDatabaseExternalEventHandler_DeleteStatementEvent(SqlDatabaseExternalEventArgs e)
+        {
+            if (ShowEventResults)
+                Console.WriteLine(string.Format("{0} : IsTrans:{1} - {2}", "EVENT DELETE", e.IsTransactionOpen, e.SQLText));
+        }
+
+        private static void SqlDatabaseExternalEventHandler_UpdateStatementEvent(SqlDatabaseExternalEventArgs e)
+        {
+            if (ShowEventResults)
+                Console.WriteLine(string.Format("{0} : IsTrans:{1} - {2}", "EVENT UPDATE", e.IsTransactionOpen, e.SQLText));
+        }
+
+        private static void SqlDatabaseExternalEventHandler_InsertStatementEvent(SqlDatabaseExternalEventArgs e)
+        {
+            if (ShowEventResults)
+                Console.WriteLine(string.Format("{0} : IsTrans:{1} - {2}", "EVENT INSERT", e.IsTransactionOpen, e.SQLText));
+        }
+
+        private static void SqlDatabaseExternalEventHandler_DataChangeNotificationEvent(int ChangeType, SqlDatabaseExternalEventArgs e)
+        {
+            if (ShowEventResults)
+                Console.WriteLine(string.Format("EVENT DataChange {0} : IsTrans:{1} - {2}", ChangeType, e.IsTransactionOpen, e.SQLText));
+        }
+
+        static void SqlDatabaseEventHandler_ExecScalarUDFEvent(SqlDatabaseExternalEventArgs e, out SqlDatabaseDataType OutColumnDataType, out object OutColumnValue)
+        {
+            if (!ShowEventResults)
+            {
+                OutColumnDataType = SqlDatabaseDataType.Integer;
+                OutColumnValue = 11234;
+                return;
+            }
+                
+
+            //Console.WriteLine(e.SQLText);
+            Console.WriteLine($"{e.ArgumentsValue[0].ToString()} - {e.RowId} - {e.IsTransactionOpen} - {e.NoOfChanges} - {e.ArgumentsCount}");
+            Console.WriteLine();
+            OutColumnDataType = SqlDatabaseDataType.Integer;
+            OutColumnValue = 11234;
+
         }
     }
 }
