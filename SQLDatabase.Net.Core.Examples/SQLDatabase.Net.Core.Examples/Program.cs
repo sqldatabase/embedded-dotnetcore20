@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Data;
 using System.Threading.Tasks;
@@ -34,6 +34,7 @@ namespace SQLDatabase.Net.Core.Examples
             SqlDatabaseExternalEventHandler.BeginTransactionEvent += SqlDatabaseExternalEventHandler_BeginTransactionEvent;
             SqlDatabaseExternalEventHandler.CommitTransactionEvent += SqlDatabaseExternalEventHandler_CommitTransactionEvent;
             SqlDatabaseExternalEventHandler.RollbackTransactionEvent += SqlDatabaseExternalEventHandler_RollbackTransactionEvent;
+                        
 
             MetaCollections();
             Console.WriteLine("**** Example and tests for wwww.sqldatabase.net ****\n");
@@ -274,22 +275,44 @@ namespace SQLDatabase.Net.Core.Examples
                 Console.WriteLine(string.Format("EVENT DataChange {0} : IsTrans:{1} - {2}", ChangeType, e.IsTransactionOpen, e.SQLText));
         }
 
+        static int iudfincrement = 0;
         static void SqlDatabaseEventHandler_ExecScalarUDFEvent(SqlDatabaseExternalEventArgs e, out SqlDatabaseDataType OutColumnDataType, out object OutColumnValue)
         {
-            if (!ShowEventResults)
-            {
-                OutColumnDataType = SqlDatabaseDataType.Integer;
-                OutColumnValue = 11234;
-                return;
-            }
-                
+            //if (!ShowEventResults)
+            //{
+            //    OutColumnDataType = SqlDatabaseDataType.Integer;
+            //    OutColumnValue = 11234;
+            //    return;
+            //}
+
+            // Default value assigned, not to break the code
+            OutColumnDataType = SqlDatabaseDataType.Null;
+            OutColumnValue = null;
 
             //Console.WriteLine(e.SQLText);
             Console.WriteLine($"{e.ArgumentsValue[0].ToString()} - {e.RowId} - {e.IsTransactionOpen} - {e.NoOfChanges} - {e.ArgumentsCount}");
             Console.WriteLine();
-            OutColumnDataType = SqlDatabaseDataType.Integer;
-            OutColumnValue = 11234;
+            if(e.ArgumentsCount > 0)
+            {
+                // Usingn Exec1 as first parameter
+                // to differentiate between multiple calls
+                if (e.ArgumentsValue[0].Equals("Exec1"))
+                {
+                    OutColumnDataType = SqlDatabaseDataType.Integer;
+                    OutColumnValue = iudfincrement++; // A integer value
+                }
+
+                if (e.ArgumentsValue[0].Equals("Exec2") && e.ArgumentsCount >= 5)
+                {
+                    //Simply join all the arguments
+                    string columnoutput = string.Join(",", new object[] { e.ArgumentsValue[1], e.ArgumentsValue[2], e.ArgumentsValue[3], e.ArgumentsValue[4] });
+                    OutColumnDataType = SqlDatabaseDataType.Text;
+                    OutColumnValue = columnoutput;
+                }
+            } 
 
         }
+
+
     }
 }
