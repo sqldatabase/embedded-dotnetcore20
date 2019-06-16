@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.IO;
@@ -102,6 +102,11 @@ namespace SQLDatabase.Net.Core.Examples
             Console.WriteLine("* Press Any key to start Identity values Example:");
             Console.ReadKey();
             IdentityColumnValues();
+            Console.WriteLine();
+
+            Console.WriteLine("* Press Any key to start Exec Scalar UDF Example:");
+            Console.ReadKey();
+            EXECUDFExample();
             Console.WriteLine();
         }
 
@@ -973,6 +978,43 @@ namespace SQLDatabase.Net.Core.Examples
                     {
                         Console.WriteLine(dr["Name"]);
                     }
+                }
+            }
+        }
+
+
+        static void EXECUDFExample()
+        {
+            using (SqlDatabaseConnection cnn = new SqlDatabaseConnection("schemaname=db;uri=file://" + ExampleDatabaseFile + "; "))
+            {
+                cnn.Open();
+                // Available from version 2.7
+                using (SqlDatabaseCommand cmd = new SqlDatabaseCommand())
+                {
+                    cmd.Connection = cnn;
+                   
+                    // SELECT - ExecScalarUDF
+                    // ExecScalarUDF is called once for each row for each call.
+                    // Following will call the event handler twice as ExecScalarUDF is called twice.
+                    DataTable dt = new DataTable();
+                    cmd.CommandText = "SELECT *, ExecScalarUDF('Exec1', Phone) AS ANumber, ExecScalarUDF('Exec2', 1, 2, @Param1, FirstName ) AS ExampleText FROM Customers LIMIT 10;";
+                    cmd.Parameters.AddWithValue("@Param1", 3);
+                    SqlDatabaseDataReader dr = cmd.ExecuteReader();
+                    for (int c = 0; c < dr.VisibleFieldCount; c++)
+                    {
+                        Console.Write(dr.GetName(c) + "\t");
+                    }
+                    Console.WriteLine(Environment.NewLine + "----------------------");
+                    while (dr.Read())
+                    {
+                        for (int c = 0; c < dr.VisibleFieldCount; c++)
+                        {
+                            Console.Write(dr.GetValue(c) + "\t");
+                        }
+                        Console.WriteLine("");
+                    };
+
+
                 }
             }
         }
